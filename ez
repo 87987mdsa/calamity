@@ -1,0 +1,109 @@
+loadstring(game:HttpGet("https://arcanecheats.xyz/api/matcha/uilib"))()
+repeat wait() until Arcane
+
+local Player = game.Players.LocalPlayer
+local collectablesFolder = game.Workspace.Collectables
+local vitems = {}
+local farming = false
+local holdTime = 2
+local waitTime = 0.5
+
+local Window = Arcane:CreateWindow("Calamity", Vector2.new(430, 300), "TokyoNight")
+
+Window:CreateTabSection("Main")
+local Tab = Window:CreateTab("Farming")
+local Sec = Window:CreateSection("Main", "Farming")
+
+Arcane:Log("loaded", 2)
+
+
+local FarmToggle = Sec:AddToggle("enable autofarm", false, function(state) 
+    farming = state
+    if state then
+        Arcane:Notify("AutoFarm", "on", 2)
+        vitems = {}
+    else
+        Arcane:Notify("AutoFarm", "off", 2)
+    end
+end)
+
+
+local HoldSlider = Sec:AddSlider("hold time", {Min = 1, Max = 5, Default = 2, Callback = function(v) 
+    holdTime = v
+end})
+
+
+local WaitSlider = Sec:AddSlider("wait between items", {Min = 0, Max = 2, Default = 0.5, Callback = function(v) 
+    waitTime = v
+end})
+
+
+Sec:AddButton("reset visited items", function()
+    vitems = {}
+    Arcane:Notify("Reset", "Items cleared", 2)
+end)
+
+
+spawn(function()
+    while true do
+        wait(0.1)
+        
+        if farming then
+            local char = Player.Character
+            
+            if char then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                
+                if hrp then
+                    local collectables = collectablesFolder:GetChildren()
+                    local fnew = false
+                    
+                    for i = 1, #collectables do
+                        if not farming then break end
+                        
+                        local model = collectables[i]
+                        
+                        if not vitems[model] then
+                            local target = model:FindFirstChild("Hitbox") or model:FindFirstChild("Cam")
+                            
+                            if target and target.Position then
+                                hrp.Position = target.Position
+                                wait(0.3)
+                                
+                                if farming then
+                                    keypress(0x45)
+                                    
+                                    local elapsed = 0
+                                    while elapsed < holdTime and farming do
+                                        wait(0.1)
+                                        elapsed = elapsed + 0.1
+                                    end
+                                    
+                                    keyrelease(0x45)
+                                    vitems[model] = true
+                                    fnew = true
+                                end
+                                
+                                wait(waitTime)
+                            end
+                        end
+                    end
+                    
+                    if not fnew and farming then
+                        local elapsed = 0
+                        while elapsed < 5 and farming do
+                            wait(0.1)
+                            elapsed = elapsed + 0.1
+                        end
+                        
+                        if farming then
+                            vitems = {}
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+Window:Finalize()
