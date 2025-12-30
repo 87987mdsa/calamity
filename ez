@@ -9,8 +9,8 @@ local vitems = {}
 local farming = false
 local farmingGifts = false
 local farmingItems = false
-local holdTime = 2
-local waitTime = 0.5
+local holdTime = 1
+local waitTime = 0
 
 local Window = Arcane:CreateWindow("icehook.lol", Vector2.new(430, 300), "TokyoNight")
 
@@ -54,11 +54,11 @@ end)
 
 local ConfigSec = Window:CreateSection("Settings", "Farming")
 
-local HoldSlider = ConfigSec:AddSlider("Hold time", {Min = 1, Max = 5, Default = 2, Callback = function(v) 
+local HoldSlider = ConfigSec:AddSlider("Hold time", {Min = 0, Max = 5, Default = 1, Callback = function(v) 
     holdTime = v
 end})
 
-local WaitSlider = ConfigSec:AddSlider("Wait between target", {Min = 0, Max = 2, Default = 0.5, Callback = function(v) 
+local WaitSlider = ConfigSec:AddSlider("Wait between target", {Min = 0, Max = 2, Default = 0, Callback = function(v) 
     waitTime = v
 end})
 
@@ -76,7 +76,7 @@ spawn(function()
             local char = Player.Character
             
             if char then
-                local hrp = char:FindFirstChild("HumanoidRootPart")
+                local hrp = chare:FindFirstChild("HumanoidRootPart")
                 
                 if hrp then
                     local collectables = collectablesFolder:GetChildren()
