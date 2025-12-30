@@ -8,13 +8,13 @@ local farming = false
 local holdTime = 2
 local waitTime = 0.5
 
-local Window = Arcane:CreateWindow("Calamity", Vector2.new(430, 300), "TokyoNight")
+local Window = Arcane:CreateWindow("icehook.lol", Vector2.new(430, 300), "TokyoNight")
 
-Window:CreateTabSection("Main")
+Window:CreateTabSection("Calamity")
 local Tab = Window:CreateTab("Farming")
 local Sec = Window:CreateSection("Main", "Farming")
 
-Arcane:Log("icehook.lol loaded", 2)
+Arcane:Log("loaded", 2)
 
 
 local FarmToggle = Sec:AddToggle("enable autofarm", false, function(state) 
