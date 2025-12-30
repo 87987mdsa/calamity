@@ -3,8 +3,12 @@ repeat wait() until Arcane
 
 local Player = game.Players.LocalPlayer
 local collectablesFolder = game.Workspace.Collectables
+local debrisFolder = game.Workspace.Debris
+local itemsFolder = game.Workspace.Maps.ItemsFolder
 local vitems = {}
 local farming = false
+local farmingGifts = false
+local farmingItems = false
 local holdTime = 2
 local waitTime = 0.5
 
@@ -12,35 +16,55 @@ local Window = Arcane:CreateWindow("icehook.lol", Vector2.new(430, 300), "TokyoN
 
 Window:CreateTabSection("Calamity")
 local Tab = Window:CreateTab("Farming")
-local Sec = Window:CreateSection("Main", "Farming")
+local FarmSec = Window:CreateSection("Main", "Farming")
+
 
 Arcane:Log("loaded", 2)
 
 
-local FarmToggle = Sec:AddToggle("enable autofarm", false, function(state) 
+
+local FarmToggle = FarmSec:AddToggle("Autofarm Collectables", false, function(state) 
     farming = state
     if state then
-        Arcane:Notify("AutoFarm", "on", 2)
+        Arcane:Notify("Collectables", "Started", 2)
         vitems = {}
     else
-        Arcane:Notify("AutoFarm", "off", 2)
+        Arcane:Notify("Collectables", "Stopped", 2)
+    end
+end)
+
+local GiftToggle = FarmSec:AddToggle("Autofarm Gifts", false, function(state) 
+    farmingGifts = state
+    if state then
+        Arcane:Notify("Gifts", "Started", 2)
+    else
+        Arcane:Notify("Gifts", "Stopped", 2)
+    end
+end)
+
+local ItemToggle = FarmSec:AddToggle("Autofarm Items", false, function(state) 
+    farmingItems = state
+    if state then
+        Arcane:Notify("Items", "Started", 2)
+    else
+        Arcane:Notify("Items", "Stopped", 2)
     end
 end)
 
 
-local HoldSlider = Sec:AddSlider("hold time", {Min = 1, Max = 5, Default = 2, Callback = function(v) 
+local ConfigSec = Window:CreateSection("Settings", "Farming")
+
+local HoldSlider = ConfigSec:AddSlider("Hold time", {Min = 1, Max = 5, Default = 2, Callback = function(v) 
     holdTime = v
 end})
 
-
-local WaitSlider = Sec:AddSlider("wait between items", {Min = 0, Max = 2, Default = 0.5, Callback = function(v) 
+local WaitSlider = ConfigSec:AddSlider("Wait between target", {Min = 0, Max = 2, Default = 0.5, Callback = function(v) 
     waitTime = v
 end})
 
-
-Sec:AddButton("reset visited items", function()
+ConfigSec:AddButton("Reset cache", function()
     vitems = {}
-    Arcane:Notify("Reset", "Items cleared", 2)
+    Arcane:Notify("Reset", "All cleared", 2)
 end)
 
 
@@ -96,9 +120,147 @@ spawn(function()
                             elapsed = elapsed + 0.1
                         end
                         
-                        if farming then
-                            vitems = {}
+                        if farming then vitems = {} end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+spawn(function()
+    while true do
+        wait(0.1)
+        
+        if farmingGifts then
+            local char = Player.Character
+            
+            if char then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                
+                if hrp then
+                    local gifts = debrisFolder:GetChildren()
+                    local fnew = false
+                    
+                    for i = 1, #gifts do
+                        if not farmingGifts then break end
+                        
+                        local gift = gifts[i]
+                        
+                        if not vitems[gift] then
+                            local target = nil
+                            
+                            local function findPartRecursive(parent, depth)
+                                depth = depth or 0
+                                if depth > 3 then return nil end
+                                
+                                for _, child in pairs(parent:GetChildren()) do
+                                    if child.ClassName == "Part" or child.ClassName == "MeshPart" or child.ClassName == "UnionOperation" then
+                                        return child
+                                    end
+                                    
+                                    if child.ClassName == "Model" then
+                                        local part = findPartRecursive(child, depth + 1)
+                                        if part then return part end
+                                    end
+                                end
+                                return nil
+                            end
+                            
+                            if gift.ClassName == "Model" then
+                                target = findPartRecursive(gift)
+                            elseif gift:IsA("BasePart") then
+                                target = gift
+                            end
+                            
+                            if target and target.Position then
+                                hrp.Position = target.Position
+                                wait(0.3)
+                                
+                                if farmingGifts then
+                                    keypress(0x45)
+                                    
+                                    local elapsed = 0
+                                    while elapsed < holdTime and farmingGifts do
+                                        wait(0.1)
+                                        elapsed = elapsed + 0.1
+                                    end
+                                    
+                                    keyrelease(0x45)
+                                    vitems[gift] = true
+                                    fnew = true
+                                end
+                                
+                                wait(waitTime)
+                            end
                         end
+                    end
+                    
+                    if not fnew and farmingGifts then
+                        wait(2)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+spawn(function()
+    while true do
+        wait(0.1)
+        
+        if farmingItems then
+            local char = Player.Character
+            
+            if char then
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                
+                if hrp then
+                    local items = itemsFolder:GetChildren()
+                    local fnew = false
+                    
+                    for i = 1, #items do
+                        if not farmingItems then break end
+                        
+                        local item = items[i]
+                        
+                        if not vitems[item] then
+                            local target = nil
+                            
+                            if item.ClassName == "Model" then
+                                local cframePart = item:FindFirstChild("CFrame")
+                                if cframePart and cframePart:IsA("BasePart") then
+                                    target = cframePart
+                                end
+                            elseif item:IsA("BasePart") then
+                                target = item
+                            end
+                            
+                            if target and target.Position then
+                                hrp.Position = target.Position
+                                wait(0.3)
+                                
+                                if farmingItems then
+                                    keypress(0x45)
+                                    
+                                    local elapsed = 0
+                                    while elapsed < holdTime and farmingItems do
+                                        wait(0.1)
+                                        elapsed = elapsed + 0.1
+                                    end
+                                    
+                                    keyrelease(0x45)
+                                    vitems[item] = true
+                                    fnew = true
+                                end
+                                
+                                wait(waitTime)
+                            end
+                        end
+                    end
+                    
+                    if not fnew and farmingItems then
+                        wait(2)
                     end
                 end
             end
