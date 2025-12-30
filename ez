@@ -14,7 +14,7 @@ Window:CreateTabSection("Main")
 local Tab = Window:CreateTab("Farming")
 local Sec = Window:CreateSection("Main", "Farming")
 
-Arcane:Log("loaded", 2)
+Arcane:Log("icehook.lol loaded", 2)
 
 
 local FarmToggle = Sec:AddToggle("enable autofarm", false, function(state) 
